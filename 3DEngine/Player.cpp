@@ -98,7 +98,6 @@ void Player::SetAnimState(const std::string& newState)
 
 void Player::Update(const Camera& camera)
 {
-    Vector3 dir{};
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
     {
         Ray ray = GetMouseRay(GetMousePosition(), camera);
@@ -109,12 +108,19 @@ void Player::Update(const Camera& camera)
         _destination = ray.position + Vector3Scale(ray.direction, hitDist);
     }
 
-    if (Vector3Distance(_destination, _position) > 0.1f && _breakdanceDuration < 0.1f) dir = Vector3Normalize(_destination - _position);
-    else dir = Vector3Zero();
+    Vector3 direction{};
+    if (Vector3Distance(_destination, _position) > 0.1f && _breakdanceDuration < 0.1f)
+    {
+        direction = Vector3Normalize(_destination - _position);
+    }
+    else
+    {
+        direction = Vector3Zero();
+    }
 
-    _position = _position + Vector3Scale(dir, _movementSpeed * GetFrameTime());
+    _position = _position + Vector3Scale(direction, _movementSpeed * GetFrameTime());
 
-    const bool onMove = (Vector3Length(dir) != 0 && _breakdanceDuration < 0.1f) ? true : false;
+    const bool onMove = (Vector3Length(direction) != 0 && _breakdanceDuration < 0.1f) ? true : false;
 
     if (onMove && IsKeyDown(KEY_LEFT_SHIFT))
     {
@@ -132,30 +138,19 @@ void Player::Update(const Camera& camera)
     {
         SetAnimState("Idle");
     }
-    
-    Quaternion currentRotation = _rotation;
+
     if (onMove)
     {
-        const Vector3 vecUp{ 0.0f, 0.0f, 1.0f };
-        float cos2Theta = vecUp.x * dir.x + vecUp.y * dir.y + vecUp.z * dir.z;
-        Vector3 cross{ vecUp.y * dir.z - vecUp.z * dir.y, vecUp.z * dir.x - vecUp.x * dir.z, vecUp.x * dir.y - vecUp.y * dir.x };
+        float rotationSpeed = 5.0f * GetFrameTime();
 
-        Quaternion targetRotation;
-        targetRotation.x = cross.x;
-        targetRotation.y = cross.y;
-        targetRotation.z = cross.z;
-        targetRotation.w = 1.0f + cos2Theta;
-
-        targetRotation = QuaternionNormalize(targetRotation);
-
-        // SLERP between current and target rotations
-        float rotationSpeed = 5.0f * GetFrameTime(); // Adjust rotation speed as necessary
+        Quaternion currentRotation = _rotation;
+        Quaternion targetRotation = QuaternionFromDirection(direction);
         _rotation = QuaternionSlerp(currentRotation, targetRotation, rotationSpeed);
     }
 
     _transform.position = Vector3{ _position.x, _position.y + 1.0f, _position.z };
     _transform.rotation = _rotation;
-    _transform.scale    = _scale;
+    _transform.scale = _scale;
 
     auto action = _animStateActions.find(_animState);
     if (action != _animStateActions.end())

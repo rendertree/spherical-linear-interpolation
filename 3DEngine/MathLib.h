@@ -91,3 +91,19 @@ inline Matrix Transform3D::ToMatrix() const
 {
     return MatrixTranslateV(position) * QuaternionToMatrix(rotation) * MatrixScaleV(scale);
 }
+
+inline Quaternion QuaternionFromDirection(const Vector3& direction)
+{
+    Quaternion result{};
+    float cos2Theta = Vector3DotProduct(Vector3{ 0.0f, 0.0f, 1.0f }, direction);
+    Vector3 cross = Vector3CrossProduct(Vector3{ 0.0f, 0.0f, 1.0f }, direction);
+
+    result.x = cross.x;
+    result.y = cross.y;
+    result.z = cross.z;
+    result.w = 1.0 + cos2Theta;
+
+    result = QuaternionNormalize(result);
+
+    return result;
+}
