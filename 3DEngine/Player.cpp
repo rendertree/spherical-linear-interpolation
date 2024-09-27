@@ -118,9 +118,7 @@ void Player::Update(const Camera& camera)
         direction = Vector3Zero();
     }
 
-    _position = _position + Vector3Scale(direction, _movementSpeed * GetFrameTime());
-
-    const bool onMove = (Vector3Length(direction) != 0 && _breakdanceDuration < 0.1f) ? true : false;
+    const bool onMove = (Vector3Length(direction) > 0);
 
     if (onMove && IsKeyDown(KEY_LEFT_SHIFT))
     {
@@ -146,11 +144,8 @@ void Player::Update(const Camera& camera)
         Quaternion currentRotation = _rotation;
         Quaternion targetRotation = QuaternionFromDirection(direction);
         _rotation = QuaternionSlerp(currentRotation, targetRotation, rotationSpeed);
+        _position = _position + Vector3Scale(direction, _movementSpeed * GetFrameTime());
     }
-
-    _transform.position = Vector3{ _position.x, _position.y + 1.0f, _position.z };
-    _transform.rotation = _rotation;
-    _transform.scale = _scale;
 
     auto action = _animStateActions.find(_animState);
     if (action != _animStateActions.end())
@@ -160,12 +155,13 @@ void Player::Update(const Camera& camera)
 
     if (IsKeyPressed(KEY_SPACE) && !onMove)
     {
-        _breakdanceDuration = 5.0f;
+        _breakdanceDuration = 4.8f;
     }
 
     const ModelAnimation& anim = _modelAnimations[_animIndex];
     _animCurrentFrame = (_animCurrentFrame + 1) % anim.frameCount;
     UpdateModelAnimation(_model, anim, _animCurrentFrame);
+    UpdateTransform3D(_transform, _position, _rotation, _scale);
 }
 
 void Player::Draw() const

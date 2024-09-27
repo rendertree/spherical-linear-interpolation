@@ -107,3 +107,10 @@ inline Quaternion QuaternionFromDirection(const Vector3& direction)
 
     return result;
 }
+
+inline void UpdateTransform3D(Transform3D& transform, const Vector3& position, const Quaternion rotation, const Vector3& scale)
+{
+    transform.position = Vector3{ position.x, position.y + 1.0f, position.z };
+    transform.rotation = rotation;
+    transform.scale = scale;
+}
